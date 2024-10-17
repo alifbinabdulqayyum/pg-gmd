@@ -12,3 +12,8 @@ conda create -y -n pggmd --file conda_package_list.txt
 conda activate pggmd
 pip install -r pip_requirements.txt
 ```
+
+Then we need to install the project which is based on [Sample-Efficient Optimization in the Latent Space of Deep Generative Models via Weighted Retraining](https://github.com/cambridge-mlg/weighted-retraining) paper.
+```
+python -m pip install -e .
+```
