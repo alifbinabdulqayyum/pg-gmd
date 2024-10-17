@@ -11,6 +11,9 @@ Then create a conda environment and install necessary packages:
 conda create -y -n pggmd --file conda_package_list.txt
 conda activate pggmd
 pip install -r pip_requirements.txt
+cd AMPL-1.4.2
+./build.sh && ./install.sh system
+cd ..
 ```
 
 Then we need to install the project which is based on [Sample-Efficient Optimization in the Latent Space of Deep Generative Models via Weighted Retraining](https://github.com/cambridge-mlg/weighted-retraining) paper.
