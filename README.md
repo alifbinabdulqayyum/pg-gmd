@@ -1,4 +1,4 @@
-# pg-gmd
+# Pathway-Guided Optimization of Deep Generative Molecular Design Models for Cancer Therapy
 
 First we have to download the [ATOM Modeling PipeLine (AMPL) for Drug Discovery](https://github.com/ATOMScience-org/AMPL) package version 1.4.2.
 ```
