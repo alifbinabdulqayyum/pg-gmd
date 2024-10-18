@@ -33,23 +33,37 @@ import pickle
 from atomsci.ddm.pipeline import model_pipeline as mp
 from atomsci.ddm.pipeline import parameter_parser as parse
 
-xc_path = "/home/alif/JTVAE/updated_pXC50_predictor/PARP1_CGUAgg_2022-06_fingerprint_graphconv_model_4f296899-1e4f-4d08-a7c5-47ef64d7fec3.tar.gz"
+# # xc_path = "/home/alif/JTVAE/updated_pXC50_predictor/PARP1_CGUAgg_2022-06_fingerprint_graphconv_model_4f296899-1e4f-4d08-a7c5-47ef64d7fec3.tar.gz"
+# xc_path = "updated_pXC50_predictor/PARP1_CGUAgg_2022-06_fingerprint_graphconv_model_4f296899-1e4f-4d08-a7c5-47ef64d7fec3.tar.gz"
 
-model_path = xc_path
-smiles_col = 'smiles'
-response_col = 'pXC50'
-dont_standardize = True
-is_featurized = False
+# model_path = xc_path
+# smiles_col = 'smiles'
+# response_col = 'pXC50'
+# dont_standardize = True
+# is_featurized = False
 
-pred_params = {'featurizer': 'computed_descriptors', 
-               'result_dir': None,
-               'id_col': 'compound_id', 
-               'smiles_col': smiles_col,
-               'response_cols': response_col}
+# pred_params = {'featurizer': 'computed_descriptors', 
+#                'result_dir': None,
+#                'id_col': 'compound_id', 
+#                'smiles_col': smiles_col,
+#                'response_cols': response_col}
 
-pred_params = parse.wrapper(pred_params)
+# pred_params = parse.wrapper(pred_params)
           
-def get_pipeline(pred_params,model_path,reload_dir=None,verbose=False):
+def get_pipeline(model_path,reload_dir=None,verbose=False):
+    smiles_col = 'smiles'
+    response_col = 'pXC50'
+    dont_standardize = True
+    is_featurized = False
+
+    pred_params = {'featurizer': 'computed_descriptors', 
+                'result_dir': None,
+                'id_col': 'compound_id', 
+                'smiles_col': smiles_col,
+                'response_cols': response_col}
+
+    pred_params = parse.wrapper(pred_params)
+
     # this is necessary to restrict the pXC50 model to use GPU, this is weird, but it WORKS
     os.environ["CUDA_VISIBLE_DEVICES"]="-1"
     
@@ -61,7 +75,7 @@ def get_pipeline(pred_params,model_path,reload_dir=None,verbose=False):
     os.environ["CUDA_VISIBLE_DEVICES"]="0"     
     return pipe 
      
-pipe = get_pipeline(pred_params=pred_params,model_path=model_path)
+# pipe = get_pipeline(pred_params=pred_params,model_path=model_path)
 
 # =============================== #
 
@@ -89,30 +103,32 @@ def standardize_smiles(smiles):
         return None
     return Chem.MolToSmiles(mol, isomericSmiles=False)
 
-def pXC50(smiles):
+def pXC50(smiles, pipe):
     with contextlib.redirect_stdout(None):
         pred_df = pipe.predict_on_smiles([smiles], AD_method='z_score')
         pIC50 = pred_df['pred'][0]
     return pIC50
     
-def therapeutic_score(smiles):
+# def therapeutic_score(smiles):
+#     with contextlib.redirect_stdout(None):
+#         pIC50 = pXC50(smiles)
+#         therapeutic_score = spl_estimator(pIC50)
+#         #model = bionetgen.bngmodel("/home/alif/BioNetGen/Apopt Repair Toy Model 011823 v2.0.bngl", 'model')
+#         #model.parameters.IC50 = 10 ** (6 - pIC50)
+#         #result = bionetgen.run(model)
+#         #therapeutic_score = result['Apopt Repair Toy Model 011823 v2.0'][-1][6]
+    
+#     return therapeutic_score
+    
+def actual_therapeutic_score(pIC50, bng_path:str, kr2:float=2.25e-1):
     with contextlib.redirect_stdout(None):
-        pIC50 = pXC50(smiles)
-        therapeutic_score = spl_estimator(pIC50)
-        #model = bionetgen.bngmodel("/home/alif/BioNetGen/Apopt Repair Toy Model 011823 v2.0.bngl", 'model')
-        #model.parameters.IC50 = 10 ** (6 - pIC50)
-        #result = bionetgen.run(model)
-        #therapeutic_score = result['Apopt Repair Toy Model 011823 v2.0'][-1][6]
-    
+        # model = bionetgen.bngmodel("BioNetGen/Apopt Repair Toy Model 011823 v2.0.bngl", 'model')
+        model = bionetgen.bngmodel(bng_path, 'model')
+        model.parameters.IC50 = 10 ** (6 - pIC50)
+        model.parameters.kr2 = kr2
+        result = bionetgen.run(model)
+        therapeutic_score = result['Apopt Repair Toy Model 011823 v2.0'][-1][6]
     return therapeutic_score
-    
-def actual_therapeutic_score(pIC50):
-	with contextlib.redirect_stdout(None):
-		model = bionetgen.bngmodel("/home/alif/BioNetGen/Apopt Repair Toy Model 011823 v2.0.bngl", 'model')
-		model.parameters.IC50 = 10 ** (6 - pIC50)
-		result = bionetgen.run(model)
-		therapeutic_score = result['Apopt Repair Toy Model 011823 v2.0'][-1][6]
-	return therapeutic_score
 
 def penalized_logP(smiles: str, min_score=-float("inf")) -> float:
     """ calculate penalized logP for a given smiles string """
@@ -163,12 +179,24 @@ def QED(smiles: str) -> float:
 # =============================== #
 ## Estimated Model
 from scipy.interpolate import CubicSpline
-pIC50, _ = np.linspace(0.0, 10.0, num=201, retstep=True)
-therap = []
-#with tqdm(total=len(pIC50)) as pbar:
-for pIC50_val in pIC50:
-	therap.append(actual_therapeutic_score(pIC50_val))
-#pbar.update(1)
-spl_estimator = CubicSpline(pIC50, therap)
+
+def get_estimated_therapeutic_model(bng_path:str, kr2:float=2.25e-1):
+    pIC50, _ = np.linspace(1.0, 11.0, num=201, retstep=True)
+    therap = []
+    #with tqdm(total=len(pIC50)) as pbar:
+    for pIC50_val in pIC50:
+        therap.append(actual_therapeutic_score(pIC50=pIC50_val, bng_path=bng_path, kr2=kr2))
+    #pbar.update(1)
+    spl_estimator = CubicSpline(pIC50, therap)
+
+    return spl_estimator
+
+# pIC50, _ = np.linspace(0.0, 10.0, num=201, retstep=True)
+# therap = []
+# #with tqdm(total=len(pIC50)) as pbar:
+# for pIC50_val in pIC50:
+# 	therap.append(actual_therapeutic_score(pIC50_val))
+# #pbar.update(1)
+# spl_estimator = CubicSpline(pIC50, therap)
 
 # =============================== #

@@ -1,0 +1,173 @@
+# 
+# ______INTRO________
+# 
+# This model follows the 11 ODE equations given in Bodgal, M et al. 2013 BMC Systems Biology
+# that provides a minimal induction of apoptosis by p53 and AKT.  These two pathways can be
+# opposing or regulatory of apoptosis.    
+# 
+# Notes:  Well mixed reactions are considered and no cell volume is inputted. 
+#     
+# Created in RuleBender 2.3.0
+# BioNetGen 2.4.0
+# MAC OS 10.15.7
+# Susan D. Mertins, Ph.D.
+# October 25, 2021
+# 
+begin model
+
+begin parameters
+
+s1   1e-2  #Basal BaxmRNA synthesis rate
+s2   3e-2  #p53 regulated BaxmRNA synthesis rate due to activation by DNA Damage
+s3   2e1   #Pro-caspase synthesis rate
+s4   2e-1  #BAX protein synthesis rate
+
+d1   1e-3  #1/s; BaxmRNA degradation rate
+d2   1e-4  #1/s: BAX protein degradation rate
+d3   2e-4  #1/s: Pro-caspase and caspase degradation rate
+
+b1   3e-5  #molecules-1 sec-1:  BAX-BCLXL on rate
+b2   3e-3  #molecules-1 sec-1:  BCLXL-BAD on rate
+b3   3e-3  #molecules-1 sec-1:  phosphoBAD-SCAF on rate
+b4   3e-5  #molecules-1 sec-1:  p53 and PARP on rate to DNA
+
+u1   1e-4  #1/s:  BAX-BCLXL off rate
+u2   1e-4  #1/s:  BCLXL-BAD off rate
+u3   1e-4  #1/s:  phosphoBAD-SCAF off rate
+u4   1e-2  #1/s:  p53-DNA off rate 
+u5   1e-4  #1/s:  PARP-DNA off rate
+
+p1   3e-10 #1/s:  Kinase activity of AKT for BAD
+q1   3e-5  #1/s:  Dephosphorylation rate for phosphoBAD
+a1   2e-10 #molecules-1 sec-1:  Procaspase activation rate by BAX
+a2   1e-12 #molecules-1 sec-1:  Procaspase autoactiavtion rate
+
+kf2 1.66e-6 #molecules-1 sec-1: Binding of NAD to PARP
+kr2 2.25e-3 #1/s: Utilization of NAD and therefore dissociation
+
+IC50 0.001
+
+kf3 1.66e-6 #molecules-1 sec-1: Binding of Inhibitor to NAD pocket of PARP
+kr3 IC50*kr2 #1/s: Derived kr3
+
+kcat2 1  #rate of PARylation by PARP
+kcat3 1  #rate of PAR removal by PARG.    
+
+DNA_DSBtot 10000
+AKTtot   2e5
+p53tot   2e5
+BADtot   2e5
+BCLXLtot 1e5
+SCAFtot  2e5 
+PARPtot  2e5  
+NADtot   1e7 
+XRCC1tot 2e5 
+PARGtot  1e4 
+Inhtot   1e5 
+
+end parameters
+
+begin molecule types
+
+DNA_DSB(br)
+p53(DNA)
+BAXmRNA()
+BAX(bclxl)
+BCLXL(bax,bad)
+BAD(P~0~1,bclxl,scaf)
+AKT(bad)
+SCAF(bad)
+Procasp(cleave~no~yes)
+PARP(DNA,CD~inact~act,NAD)
+NAD(sub)
+XRCC1(Glu~uPAR~PAR)
+PARG(CD)
+Inh(isub)
+
+end molecule types
+
+begin seed species
+
+DNA_DSB(br)          DNA_DSBtot
+p53(DNA)             p53tot
+BCLXL(bax,bad)       BCLXLtot
+BAD(P~0,bclxl,scaf)  BADtot
+AKT(bad)             AKTtot
+SCAF(bad)            SCAFtot
+PARP(DNA,CD~inact,NAD) PARPtot
+NAD(sub)               NADtot
+XRCC1(Glu~uPAR)        XRCC1tot
+PARG(CD)               PARGtot
+Inh(isub)              Inhtot
+
+end seed species
+
+begin observables
+
+Molecules p53_DNAbound   p53(DNA!+)
+Molecules PARP_DNAbound  PARP(DNA!+)
+Molecules BAXinh         BAX(bclxl!1).BCLXL(bax!1,bad)
+Molecules FreeBAX        BAX(bclxl)
+Molecules BADbound       BAD(P~1,scaf!1).SCAF(bad!1)
+Molecules Activecasp     Procasp(cleave~yes)
+Molecules PARP_NAD       PARP(DNA!2,CD~act,NAD!3).DNA_DSB(br!2).NAD(sub!3)
+Molecules XRCC1_PAR      XRCC1(Glu~PAR)
+Molecules Inh_bound      Inh(isub!4).PARP(DNA,CD~act,NAD!4)
+
+end observables
+
+begin reaction rules
+ 
+p53(DNA) + DNA_DSB(br) <-> p53(DNA!1).DNA_DSB(br!1) b4, u4
+
+PARP(DNA,CD~inact,NAD) + DNA_DSB(br) <-> PARP(DNA!2,CD~act,NAD).DNA_DSB(br!2) b4, u5
+
+PARP(DNA!2,CD~act,NAD).DNA_DSB(br!2) + NAD(sub) <-> PARP(DNA!2,CD~act,NAD!3).DNA_DSB(br!2).NAD(sub!3) kf2,kr2
+
+PARP(DNA!+,CD~act,NAD!3).NAD(sub!3) + XRCC1(Glu~uPAR) -> PARP(DNA!+,CD~act,NAD) + NAD(sub) + XRCC1(Glu~PAR) kcat2
+
+PARG(CD) + XRCC1(Glu~PAR) -> PARG(CD) + XRCC1(Glu~uPAR) kcat3
+ 
+Inh(isub) + PARP(DNA!2,CD~act,NAD).DNA_DSB(br!2) <-> Inh(isub!4).PARP(DNA,CD~act,NAD!4) + DNA_DSB(br) kf3,kr3
+
+p53(DNA!+) -> p53(DNA!+) + BAXmRNA() s2
+
+BAXmRNA() -> BAX(bclxl) s4
+
+0 -> BAXmRNA() s1
+ 
+BAXmRNA() -> 0 d1
+ 
+BAX(bclxl) -> 0 d2
+ 
+BAX(bclxl) + BCLXL(bax,bad) <-> BAX(bclxl!1).BCLXL(bax!1,bad) b1, u1
+  
+AKT(bad) + BAD(P~0,bclxl,scaf) -> AKT(bad) + BAD(P~1,bclxl,scaf) p1
+ 
+BAD(P~1,bclxl,scaf) -> BAD(P~0,bclxl,scaf) q1
+ 
+BAD(P~1,bclxl,scaf) + SCAF(bad) <-> BAD(P~1,bclxl,scaf!1).SCAF(bad!1) b3, u3
+ 
+BAD(P~0,bclxl,scaf) + BCLXL(bax,bad) <-> BAD(P~0,bclxl!1,scaf).BCLXL(bax,bad!1) b2, u2
+ 
+BAX(bclxl) + Procasp(cleave~no) -> BAX(bclxl) + Procasp(cleave~yes) a1
+ 
+Procasp(cleave~yes) + Procasp(cleave~no) -> Procasp(cleave~yes) + Procasp(cleave~yes) a2
+ 
+0 -> Procasp(cleave~no) s3
+ 
+Procasp(cleave~no) -> 0 d3
+ 
+Procasp(cleave~yes) -> 0 d3
+
+end reaction rules
+
+end model
+
+begin actions 
+
+generate_network({overwrite=>1})
+
+simulate_ode({t_end=>20000,n_steps=>20})
+
+end actions

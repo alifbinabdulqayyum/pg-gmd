@@ -6,6 +6,7 @@ from tqdm.auto import tqdm
 from rdkit import Chem
 from weighted_retraining.chem.chem_utils import (
     pXC50,
+    get_pipeline,
     rdkit_quiet,
     standardize_smiles,
 )
@@ -16,7 +17,7 @@ parser.add_argument(
     "--input_file",
     type=str,
     nargs="+",
-    help="list of file of SMILES to calculate logP for",
+    help="list of file of SMILES to calculate pIC50 for",
     required=True,
 )
 parser.add_argument(
@@ -26,12 +27,21 @@ parser.add_argument(
     help="pkl file to write properties to",
     required=True,
 )
+parser.add_argument(
+    "-pmp",
+    "--parp_model_path",
+    type=str,
+    help="Filepath of the PARP Model",
+    required=True,
+)
 
 if __name__ == "__main__":
 
     rdkit_quiet()
 
     args = parser.parse_args()
+
+    pipe = get_pipeline(model_path=args.parp_model_path)
 
     # Read input file
     print("Reading input file...")
@@ -45,7 +55,7 @@ if __name__ == "__main__":
     prop_dict = dict()
     for smiles in tqdm(input_smiles, desc="calc pXC50", dynamic_ncols=True):
         c_smiles = standardize_smiles(smiles)
-        logP = pXC50(c_smiles)
+        logP = pXC50(pipe=pipe, smiles=c_smiles)
         prop_dict[smiles] = logP
         prop_dict[c_smiles] = logP
 
