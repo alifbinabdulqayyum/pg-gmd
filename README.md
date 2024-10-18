@@ -19,6 +19,9 @@ conda activate pggmd
 
 # Install necessary pip packages
 pip install -r pip_requirements.txt
+pip uninstall -y keras
+pip install -U tensorflow==2.8.0 keras==2.8.0
+
 
 # Install AMPL package
 cd AMPL-1.4.2
