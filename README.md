@@ -27,6 +27,8 @@ pip install -U tensorflow==2.8.0 keras==2.8.0
 cd AMPL-1.4.2
 ./build.sh && ./install.sh system
 cd ..
+# Uninstall rdkit-pypi as this conflicts with weighted-retraining requirements
+pip uninstall -y rdkit-pypi
 ```
 
 Then we need to install the project which is based on [Sample-Efficient Optimization in the Latent Space of Deep Generative Models via Weighted Retraining](https://github.com/cambridge-mlg/weighted-retraining) paper.

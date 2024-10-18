@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 
 # My imports
-from weighted_retraining.chem.chem_utils import standardize_smiles, penalized_logP, pXC50, therapeutic_score
+from weighted_retraining.chem.chem_utils import standardize_smiles, penalized_logP, pXC50, get_estimated_therapeutic_model, get_pipeline #,therapeutic_score
 
 # My imports
 from weighted_retraining.chem.jtnn import MolTreeFolder, MolTreeDataset, Vocab, MolTree

@@ -3,10 +3,10 @@ chem_dir="data/chem/orig_model"
 mkdir -p "$chem_dir"
 cp -r assets/data/*.txt "$chem_dir"
 
-# # Normally you might make the vocab, but the vocab is already made
-# # (it was copied from the original repo,
-# # so may not be exactly reproducible with the code in this repo)
-# # To make vocab for another model/dataset, run a command like the following:
+# Normally you might make the vocab, but the vocab is already made
+# (it was copied from the original repo,
+# so may not be exactly reproducible with the code in this repo)
+# To make vocab for another model/dataset, run a command like the following:
 
 # # Before running this, it is suggested to uninstall the rdkit-pypi, rdkit, and then reinstall rdkit only:
 # # ```
@@ -15,9 +15,38 @@ cp -r assets/data/*.txt "$chem_dir"
 
 # conda install https://conda.anaconda.org/conda-forge/linux-64/rdkit-2020.09.5-py37he53b9e1_0.tar.bz2
 # # ```
-# python weighted_retraining/chem/create_vocab.py \
-#     --input_file=data/chem/orig_model/train.txt \
-#     --output_file=data/chem/orig_model/vocab-CHECK.txt
+python weighted_retraining/chem/create_vocab.py \
+    --input_file=data/chem/orig_model/train.txt \
+    --output_file=data/chem/orig_model/vocab-CHECK.txt
+# # After this is done, reinstall rdkit-pypi:
+# # ```
+# pip install -U rdkit-pypi==2022.3.1
+# # ```
+
+# Preprocess the train data
+# # Before running this, it is suggested to uninstall the rdkit-pypi, rdkit, and then reinstall rdkit only:
+# # ```
+# pip uninstall -y rdkit-pypi==2022.3.1
+# conda remove --force rdkit==2020.09.5
+
+# conda install https://conda.anaconda.org/conda-forge/linux-64/rdkit-2020.09.5-py37he53b9e1_0.tar.bz2
+# # ```
+preprocess_script="weighted_retraining/chem/preprocess_data.py"
+
+# Updated Training Set
+out_dir="$chem_dir"/tensors_train
+mkdir "$out_dir"
+python "$preprocess_script" \
+    -t "$chem_dir"/train.txt \
+    -d "$out_dir" 
+
+# Updated Validation Set
+out_dir="$chem_dir"/tensors_val
+mkdir "$out_dir"
+python "$preprocess_script" \
+    -t "$chem_dir"/val.txt \
+    -d "$out_dir" 
+
 # # After this is done, reinstall rdkit-pypi:
 # # ```
 # pip install -U rdkit-pypi==2022.3.1
