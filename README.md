@@ -29,6 +29,10 @@ cd AMPL-1.4.2
 cd ..
 # Uninstall rdkit-pypi as this conflicts with weighted-retraining requirements
 pip uninstall -y rdkit-pypi
+conda remove --force rdkit==2020.09.5
+
+# Then reinstall rdkit again
+conda install https://conda.anaconda.org/conda-forge/linux-64/rdkit-2020.09.5-py37he53b9e1_0.tar.bz2
 ```
 
 Then we need to install the project which is based on [Sample-Efficient Optimization in the Latent Space of Deep Generative Models via Weighted Retraining](https://github.com/cambridge-mlg/weighted-retraining) paper.
