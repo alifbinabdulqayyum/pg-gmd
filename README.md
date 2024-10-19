@@ -42,14 +42,14 @@ python -m pip install -e .
 
 ## Preprocess the data
 
-First we preprocess the dataset 
+First, to preprocess the dataset, run the following command: 
 ```
 bash scripts/data/setup-chem.sh
 ```
 
 ## Train the unweighted model
 
-We then train the unweighted model
+We then train the unweighted model, by running the following command:
 ```
 bash scripts/models/train-chem.sh
 ```
