@@ -115,10 +115,34 @@ def _batch_decode_z_and_props(
 
     # Calculate objective function values and choose which points to keep
     # Invalid points get a value of None
-    z_prop = [
-        args.invalid_score if s is None else datamodule.train_dataset.prop_func(s)
-        for s in z_decode
-    ]
+    # z_prop = [
+    #     args.invalid_score if s is None else datamodule.train_dataset.prop_func(s)
+    #     for s in z_decode
+    # ]
+    z_prop = []
+    for s in z_decode:
+        if s is None:
+            z_prop.append(args.invalid_score)
+        else:
+            if args.property == 'therapeutic_score':
+                z_prop.append(
+                    datamodule.train_dataset.prop_func(
+                        datamodule.train_dataset.parp_prop_func(
+                            smiles=s, 
+                            pipe=datamodule.train_dataset.pipe
+                        )
+                    )
+                )
+            elif args.property == 'pXC50':
+                z_prop.append(
+                    datamodule.train_dataset.prop_func(
+                        pipe=datamodule.train_dataset.pipe, smiles=s
+                    )
+                )
+            else:
+                z_prop.append(
+                    datamodule.train_dataset.prop_func(s)
+                )
 
     # Now back to normal
     if pbar is not None:
