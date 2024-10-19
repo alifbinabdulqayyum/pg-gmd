@@ -53,6 +53,7 @@ We then train the unweighted model
 ```
 bash scripts/models/train-chem.sh
 ```
+We provided a unweighted trained model in this repository. 
 
 ## Optimize the model through weighted retraining
 
