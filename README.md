@@ -39,3 +39,34 @@ Then we need to install the project which is based on [Sample-Efficient Optimiza
 ```
 python -m pip install -e .
 ```
+
+## Preprocess the data
+
+First we preprocess the dataset 
+```
+bash scripts/data/setup-chem.sh
+```
+
+## Train the unweighted model
+
+We then train the unweighted model
+```
+bash scripts/models/train-chem.sh
+```
+
+## Optimize the model through weighted retraining
+
+To retrain the JTVAE with viable pathway model, run the following command:
+```
+bash scripts/opt/opt-chem-viable.sh
+```
+
+To retrain the JTVAE with modified pathway model, run the following command:
+```
+bash scripts/opt/opt-chem-modified.sh
+```
+
+To retrain the JTVAE with impractical pathway model, run the following command:
+```
+bash scripts/opt/opt-chem-impractical.sh
+```
