@@ -62,4 +62,4 @@ if __name__ == "__main__":
     # Output to a file
     print("Writing output file...")
     with open(args.output_file, "wb") as f:
-        pkl.dump(prop_dict, f)
+        pkl.dump(prop_dict, f) 

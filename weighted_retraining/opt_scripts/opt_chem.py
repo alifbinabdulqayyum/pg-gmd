@@ -228,7 +228,7 @@ def latent_optimization(
     curr_gp_file = None
     all_new_smiles = []
     all_new_props = []
-    for gp_iter in range(num_queries_to_do):
+    for gp_iter in range(num_queries_to_do): 
 
         # Part 1: fit GP
         # ===============================

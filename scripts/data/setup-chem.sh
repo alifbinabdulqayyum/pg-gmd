@@ -12,22 +12,22 @@ cp -r assets/data/*.txt "$chem_dir"
 #     --input_file=data/chem/orig_model/train.txt \
 #     --output_file=data/chem/orig_model/vocab-CHECK.txt
 
-# Preprocess the data
-preprocess_script="weighted_retraining/chem/preprocess_data.py"
+# # Preprocess the data
+# preprocess_script="weighted_retraining/chem/preprocess_data.py"
 
-# Training Set
-out_dir="$chem_dir"/tensors_train
-mkdir "$out_dir"
-python "$preprocess_script" \
-    -t "$chem_dir"/train.txt \
-    -d "$out_dir" 
+# # Training Set
+# out_dir="$chem_dir"/tensors_train
+# mkdir "$out_dir"
+# python "$preprocess_script" \
+#     -t "$chem_dir"/train.txt \
+#     -d "$out_dir" 
 
-# Validation Set
-out_dir="$chem_dir"/tensors_val
-mkdir "$out_dir"
-python "$preprocess_script" \
-    -t "$chem_dir"/val.txt \
-    -d "$out_dir" 
+# # Validation Set
+# out_dir="$chem_dir"/tensors_val
+# mkdir "$out_dir"
+# python "$preprocess_script" \
+#     -t "$chem_dir"/val.txt \
+#     -d "$out_dir" 
 
 therap_script="weighted_retraining/chem/calc_therapeutic_score.py"
 pIC50_script="weighted_retraining/chem/calc_pXC50.py"

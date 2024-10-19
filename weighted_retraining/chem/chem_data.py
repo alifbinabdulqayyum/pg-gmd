@@ -43,7 +43,7 @@ def tensorize(smiles, assm=True):
     for node in mol_tree.nodes:
         del node.mol
 
-    return mol_tree
+    return mol_tree 
 
 
 ##################################################
@@ -52,7 +52,14 @@ def tensorize(smiles, assm=True):
 class WeightedMolTreeFolder(MolTreeFolder):
     """ special weighted mol tree folder """
 
-    def __init__(self, prop, property_dict, data_weighter, train_frac, *args, **kwargs):
+    def __init__(self, 
+                 prop, 
+                 pathway_model,
+                 parp_model_path,
+                 bngl_model_path,
+                 property_dict, 
+                 data_weighter, 
+                 train_frac, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Store all the underlying data
@@ -67,9 +74,22 @@ class WeightedMolTreeFolder(MolTreeFolder):
         if self.property == "logP":
             self.prop_func = penalized_logP
         elif self.property == 'pXC50':
+            self.pipe = get_pipeline(model_path=parp_model_path)
             self.prop_func = pXC50
         elif self.property == 'therapeutic_score':
-            self.prop_func = therapeutic_score
+            self.pipe = get_pipeline(model_path=parp_model_path)
+            self.parp_prop_func = pXC50
+            # Set kr2 value according to the specified pathway model
+            if pathway_model == "viable":
+                kr2 = 2.25e-1
+            elif pathway_model == "modified":
+                kr2 = 2.25e-3
+            elif pathway_model == "impractical":
+                kr2 = 2.25e-6
+            else:
+                raise NotImplementedError("Not available in the list of pathway models")
+
+            self.prop_func = get_estimated_therapeutic_model(bng_path=bngl_model_path, kr2=kr2)
         else:
             raise NotImplementedError(self.property)
         self._set_data_properties(property_dict)
@@ -90,7 +110,12 @@ class WeightedMolTreeFolder(MolTreeFolder):
             for s in tqdm(
                 set(self.canonic_smiles) - set(property_dict), desc="calc properties"
             ):
-                property_dict[s] = self.prop_func(s)
+                if self.property == 'pXC50':
+                    property_dict[s] = self.prop_func(pipe=self.pipe, smiles=s)
+                elif self.property == 'therapeutic_score':
+                    property_dict[s] = self.prop_func(self.parp_prop_func(smiles=s, pipe=self.pipe))
+                else:
+                    property_dict[s] = self.prop_func(s)
 
         # Randomly check that the properties match the ones calculated
         # Check first few, random few, then last few
@@ -104,9 +129,21 @@ class WeightedMolTreeFolder(MolTreeFolder):
         prop_check_idxs = sorted(list(set(prop_check_idxs)))
         for i in prop_check_idxs:
             s = self.canonic_smiles[i]
-            assert np.isclose(
-                self.prop_func(s), property_dict[s], rtol=1e-3, atol=1e-4 # rtol=1e-3, atol=1e-4, higher values for therapeutic score
-            ), f"score for smiles {s} doesn't match property dict for property {self.property}"
+            if self.property == 'pXC50':
+                # property_dict[s] = self.prop_func(pipe=self.pipe, smiles=s)
+                assert np.isclose(
+                    self.prop_func(pipe=self.pipe, smiles=s), property_dict[s], rtol=1e-3, atol=1e-4 # rtol=1e-3, atol=1e-4, higher values for therapeutic score
+                ), f"score for smiles {s} doesn't match property dict for property {self.property}"
+            elif self.property == 'therapeutic_score':
+                # property_dict[s] = self.prop_func(self.parp_prop_func(smiles=s, pipe=self.pipe))
+                assert np.isclose(
+                    self.prop_func(self.parp_prop_func(smiles=s, pipe=self.pipe)), property_dict[s], rtol=1e-3, atol=1e-4 # rtol=1e-3, atol=1e-4, higher values for therapeutic score
+                ), f"score for smiles {s} doesn't match property dict for property {self.property}"
+            else:
+                # property_dict[s] = self.prop_func(s)
+                assert np.isclose(
+                    self.prop_func(s), property_dict[s], rtol=1e-3, atol=1e-4 # rtol=1e-3, atol=1e-4, higher values for therapeutic score
+                ), f"score for smiles {s} doesn't match property dict for property {self.property}"
 
         # Finally, set properties attribute!
         self.data_properties = np.array([property_dict[s] for s in self.canonic_smiles])
@@ -183,6 +220,11 @@ class WeightedJTNNDataset(pl.LightningDataModule):
         self.batch_size = hparams.batch_size
         self.property = hparams.property
         self.property_file = hparams.property_file
+
+        self.pathway_model = hparams.pathway_model
+        self.parp_model_path = hparams.parp_model_path
+        self.bngl_model_path = hparams.bngl_model_path
+
         self.data_weighter = data_weighter
         self.train_frac = train_frac
 
@@ -202,6 +244,26 @@ class WeightedJTNNDataset(pl.LightningDataModule):
             default=None,
             help="dictionary file mapping smiles to properties. Optional but recommended",
         )
+        data_group.add_argument(
+            "--pathway_model", 
+            type=str, 
+            choices=["viable", "modified", "impractical"],
+            default="viable",
+            help="The type of Pathway Model to be used to calculate the Therapeutic Score",
+            required=False,
+        )
+        data_group.add_argument(
+            "--parp_model_path",
+            type=str,
+            help="Filepath of the PARP Model",
+            required=False,
+        )
+        data_group.add_argument(
+            "--bngl_model_path",
+            type=str,
+            help="Filepath of the Pathway Model",
+            required=False,
+        )
         return parent_parser
 
     def setup(self, stage):
@@ -219,6 +281,9 @@ class WeightedJTNNDataset(pl.LightningDataModule):
 
         self.train_dataset = WeightedMolTreeFolder(
             self.property,
+            self.pathway_model,
+            self.parp_model_path,
+            self.bngl_model_path,
             property_dict,
             self.data_weighter, self.train_frac,
             self.train_path,
@@ -233,6 +298,9 @@ class WeightedJTNNDataset(pl.LightningDataModule):
         else:
             self.val_dataset = WeightedMolTreeFolder(
                 self.property,
+                self.pathway_model,
+                self.parp_model_path,
+                self.bngl_model_path,
                 property_dict,
                 self.data_weighter, 1.0,
                 self.val_path,

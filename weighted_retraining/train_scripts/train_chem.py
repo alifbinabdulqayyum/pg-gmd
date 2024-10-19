@@ -19,10 +19,10 @@ if __name__ == "__main__":
 
     # Parse arguments
     hparams = parser.parse_args()
-    pl.seed_everything(hparams.seed)
+    pl.seed_everything(hparams.seed) 
 
     # Create data
-    datamodule = WeightedJTNNDataset(hparams, utils.DataWeighter(hparams))
+    datamodule = WeightedJTNNDataset(hparams, utils.DataWeighter(hparams), train_frac=1.0)
     datamodule.setup("fit")
 
     # Load model
