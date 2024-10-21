@@ -71,3 +71,8 @@ To retrain the JTVAE with impractical pathway model, run the following command:
 ```
 bash scripts/opt/opt-chem-impractical.sh
 ```
+
+To retrain the JTVAE for pIC50 optimization, run the following command:
+```
+bash scripts/opt/opt-chem-pXC50.sh
+```
