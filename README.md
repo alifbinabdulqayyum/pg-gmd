@@ -87,3 +87,7 @@ k = 4
 ```
 k = 3
 ```
+
+## Sample molecules with optimized JTVAE at consecutive retraining iterations
+
+Run the `Sample-molecules.ipynb` script 
