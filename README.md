@@ -76,3 +76,8 @@ To retrain the JTVAE for pIC50 optimization, run the following command:
 ```
 bash scripts/opt/opt-chem-pXC50.sh
 ```
+
+To optimize the models with different `k` values, update the `k` value in the bash scripts:
+```
+k = 5 # 4 # 3
+```
