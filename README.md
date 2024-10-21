@@ -98,3 +98,7 @@ To measure the therapeutic score of the generated molecules for different pathwa
 ```
 bash scripts/plots/measure-chem-property.sh
 ```
+
+## Plot the results
+
+Run the `Sample-molecules.ipynb` script
