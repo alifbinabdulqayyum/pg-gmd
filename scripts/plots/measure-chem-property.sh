@@ -5,6 +5,8 @@ sample_path="sample-results"
 
 save_filedir="gen-mols-property"
 
+ncpu=16
+
 # Calculate properties of generated molecules with differnet pathway models
 for pathway_model in "viable" "modified" "impractical";
 do
@@ -13,5 +15,6 @@ do
         --bngl-model-path="$bngl_model_path" \
         --pathway-model="$pathway_model" \
         --save-filedir="$save_filedir" \
-        --sample-path="$sample_path"
+        --sample-path="$sample_path" \
+        --ncpu=$ncpu
 done

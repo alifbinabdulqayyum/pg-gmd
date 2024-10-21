@@ -29,6 +29,7 @@ parser.add_argument('--pathway-model', type=str, required=True, choices=['viable
 parser.add_argument('--sample-path', type=str, required=True, help='Directory for the generated molecule samples')
 parser.add_argument('--bngl-model-path', required=True, help='Filepath for the pathway model')
 parser.add_argument('--save-filedir', type=str, required=True, help='Directory to save the results')
+parser.add_argument('--ncpu', type=int, default=16)
 
 warnings.filterwarnings("ignore")
 
@@ -156,7 +157,7 @@ print("Measuring therapeutic scores of the generated molecules \n")
 with open(os.path.join(args.save_filedir, "gen_pXC50_{}_pathway_model.pkl".format(args.pathway_model)), "rb") as f:
     pXC50_dict = pickle.load(f)
 
-ncpu = 12
+ncpu = args.ncpu
 
 batch_size = len(all_smiles) // ncpu + 1
 batches = [all_smiles[i : i + batch_size] for i in range(0, len(all_smiles), batch_size)]
