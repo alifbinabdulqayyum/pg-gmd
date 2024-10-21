@@ -91,3 +91,10 @@ k = 3
 ## Sample molecules with optimized JTVAE at consecutive retraining iterations
 
 Run the `Sample-molecules.ipynb` script 
+
+## Calculate the therapeutic scores of the generated molecules
+
+To measure the therapeutic score of the generated molecules for different pathway models, run the following command:
+```
+bash scripts/plots/measure-chem-property.sh
+```
