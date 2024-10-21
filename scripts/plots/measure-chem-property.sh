@@ -3,7 +3,7 @@ bngl_model_path="BioNetGen/Apopt Repair Toy Model 011823 v2.0.bngl"
 
 sample_path="sample-results"
 
-save_filedir="gen-mols-property"
+save_filedir="gen-mols-property" 
 
 ncpu=16
 

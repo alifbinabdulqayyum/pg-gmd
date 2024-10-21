@@ -21,7 +21,7 @@ from multiprocessing import Pool
 
 import argparse
 
-# arguments and argument checking
+# arguments and argument checking 
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--parp-model-path', type=str, required=True, help='Filepath for the PARP model')
