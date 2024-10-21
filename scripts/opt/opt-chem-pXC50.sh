@@ -14,7 +14,7 @@ r=50
 weight_type="rank"
 lso_strategy="opt"
 
-k=1e-6
+k=6
 
 echo "Property to optimize: pIC50"
 
@@ -37,6 +37,6 @@ python weighted_retraining/opt_scripts/opt_chem.py \
     --n_best_points=2000 --n_rand_points=8000 \
     --n_inducing_points=500 \
     --invalid_score=0 \
-    --weight_type="$weight_type" --rank_weight_k="$k" \
+    --weight_type="$weight_type" --rank_weight_k="1e-$k" \
     --samples_per_model=1000 \
     --parp_model_path="$parp_model_path" 
