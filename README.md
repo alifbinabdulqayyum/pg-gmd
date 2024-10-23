@@ -101,4 +101,4 @@ bash scripts/plots/measure-chem-property.sh
 
 ## Plot the results
 
-Run the `Sample-molecules.ipynb` script
+Run the `Plot-result.ipynb` script
