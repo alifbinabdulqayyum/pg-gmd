@@ -106,3 +106,7 @@ Run the `Plot-result.ipynb` script
 ## Training The Conditional Generative Models
 
 Check `PropMolFlow` subfolder for training the conditional generative models.
+
+## Acknowledgements
+
+We sincerely thank the authors of [Sample-Efficient Optimization in the Latent Space of Deep Generative Models via Weighted Retraining](https://github.com/cambridge-mlg/weighted-retraining) and [PropMolFlow: Property-guided Molecule Generation with Geometry-Complete Flow Matching](https://github.com/Liu-Group-UF/PropMolFlow) for their excellent work. Our code implementations are based on these two works.
