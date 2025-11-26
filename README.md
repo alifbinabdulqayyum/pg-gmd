@@ -102,3 +102,7 @@ bash scripts/plots/measure-chem-property.sh
 ## Plot the results
 
 Run the `Plot-result.ipynb` script
+
+## Training The Conditional Generative Models
+
+Check `PropMolFlow` subfolder for training the conditional generative models.
