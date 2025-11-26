@@ -16,7 +16,7 @@ for data_split in tqdm(data_split_list):
     # data_dict['property_names'] = data_dict['property_names'][:-1]
     # ==== #
 
-    with open(f'./data/qm9_raw/qm9_pIC50_amanda.pkl', 'rb') as file:
+    with open(f'qm9_pIC50_amanda.pkl', 'rb') as file:
         pIC50_dict = pickle.load(file)
 
     pIC50_list = []
