@@ -12,7 +12,7 @@ dataset:
   - F
   dataset_name: qm9
   dataset_size: null
-  processed_data_dir: data/qm9_old
+  processed_data_dir: data/qm9_updated
   raw_data_dir: data/qm9_raw
   conditioning:
     enabled: true
