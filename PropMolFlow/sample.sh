@@ -1,7 +1,3 @@
-source "/raid/alifbinabdulqayyum/anaconda3/bin/activate"
-conda activate propmolflow
-
-cd "/raid/alifbinabdulqayyum/PropMolFlow"
 data_split='second'
 
 for method in 'concatenate' 'concatenate_multiply' 'multiply' 'concatenate_sum' 'sum';
